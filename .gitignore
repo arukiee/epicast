@@ -1,0 +1,35 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# SQLite database (don't commit prod data)
+backend/epicast.db
+backend/epicast_test.db
+
+# ── Node / Frontend ────────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+
+# ── OS / IDE ──────────────────────────────────────────────────────────────────
+.DS_Store
+.cursor/
+*.swp
+.idea/
+.vscode/
+
+# ── Secrets (always exclude) ──────────────────────────────────────────────────
+backend/.env
+!backend/.env.example
