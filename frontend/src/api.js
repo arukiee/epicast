@@ -78,46 +78,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
-
+    // If the token is expired/invalid and there's no refresh mechanism
+    // (cookie-based refresh is disabled in production), just redirect to login.
     if (
       error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry &&
-      !shouldSkipTokenRefresh(originalRequest)
+      !shouldSkipTokenRefresh(error.config)
     ) {
-      originalRequest._retry = true
-
-      if (refreshPromise) {
-        return new Promise((resolve, reject) => {
-          refreshQueue.push((err, token) => {
-            if (err) {
-              reject(err)
-            } else {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-              resolve(api(originalRequest))
-            }
-          })
-        })
-      }
-
-      try {
-        const newToken = await refreshAccessToken()
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
-        return api(originalRequest)
-      } catch (refreshError) {
-        localStorage.removeItem('epicast_token')
-        localStorage.removeItem('epicast_user')
-        if (!window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login'
-        }
-        return Promise.reject(refreshError)
+      localStorage.removeItem('epicast_token')
+      localStorage.removeItem('epicast_user')
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
       }
     }
-
     return Promise.reject(error)
   }
 )
+
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const login = (email, password) => api.post('/login', { email, password })

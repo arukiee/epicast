@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { logout, ensureSession } from '../api.js'
+import { logout } from '../api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, FileText, TrendingUp, Bell, ScrollText,
@@ -35,24 +35,13 @@ export default function Layout() {
   }, [])
 
   useEffect(() => {
-    let cancelled = false
+    // Token is already sent via Authorization header on every API call.
+    // No proactive /refresh needed — just confirm the token exists.
     if (!localStorage.getItem('epicast_token')) {
-      setSessionReady(true)
-      return undefined
+      navigate('/login', { replace: true })
+      return
     }
-    ensureSession()
-      .then(() => {
-        if (!cancelled) setSessionReady(true)
-      })
-      .catch(() => {
-        if (cancelled) return
-        localStorage.removeItem('epicast_token')
-        localStorage.removeItem('epicast_user')
-        navigate('/login', { replace: true })
-      })
-    return () => {
-      cancelled = true
-    }
+    setSessionReady(true)
   }, [navigate])
 
   const handleLogout = async () => {
