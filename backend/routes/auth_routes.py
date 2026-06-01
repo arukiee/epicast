@@ -718,42 +718,14 @@ async def approve_access_request(
 
     delivery = send_verification_email(row.email, row.full_name, verify_url)
     if not delivery.success:
-        # Email delivery failed (e.g. SMTP blocked on hosting platform).
-        # Fall back: create the user account directly and return a setup link
-        # that the admin can share with the user manually.
-        username = body.username.strip()
-        if db.query(User).filter(User.username == username).first():
-            username = f"{username}_{secrets.token_hex(2)}"
-
-        setup_token_plain = secrets.token_urlsafe(32)
-        setup_expires = (datetime.now(timezone.utc) + timedelta(days=3)).isoformat()
-        temp_pwd_hash = hash_password(secrets.token_urlsafe(16))
-
-        user = User(
-            username=username,
-            password=temp_pwd_hash,
-            role=body.role,
-            assigned_clinic=body.assigned_clinic or "",
-            assigned_area=body.assigned_area or "",
-            full_name=row.full_name,
-            email=_normalize_email(row.email),
-            status="active",
-            password_setup_token=store_token(setup_token_plain),
-            password_setup_expires=setup_expires,
-        )
-        db.add(user)
-        row.status = "active"
-        row.provisioned_username = username
+        row.status = "pending_approval"
+        row.verification_token = None
+        row.verification_expires = None
         db.commit()
-
-        setup_url = f"{_app_public_url(request)}/setup-password?token={setup_token_plain}"
-        log_activity(current_user["username"], f"APPROVED ACCESS REQUEST #{request_id} (email failed — direct account created for {username})", db)
-        return {
-            "message": f"Email delivery failed, but the account '{username}' has been created. Share this setup link with the user so they can set their password:",
-            "setup_url": setup_url,
-            "setup_token": setup_token_plain,
-            "username": username,
-        }
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=_delivery_user_message(delivery),
+        )
 
     log_activity(current_user["username"], f"APPROVED ACCESS REQUEST #{request_id} (verification sent to {row.email})", db)
     payload = {"message": "Access request approved. A verification email has been sent to the user."}

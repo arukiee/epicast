@@ -80,7 +80,7 @@ export default function AccessRequestsPage() {
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
-    setTimeout(() => setToast(null), 10000)
+    setTimeout(() => setToast(null), 4000)
   }
 
   const openApproval = (row) => {
@@ -110,25 +110,13 @@ export default function AccessRequestsPage() {
     }
     setPSubmitting(true)
     try {
-      const { data } = await approveAccessRequest(provisionFor.id, {
+      await approveAccessRequest(provisionFor.id, {
         username: pForm.username.trim(),
         role: pForm.role,
         assigned_area: pForm.assigned_area,
         assigned_clinic: pForm.assigned_clinic,
       })
-      if (data.setup_url) {
-        // Email failed — account created directly, show setup link to admin
-        const copied = await navigator.clipboard.writeText(data.setup_url).then(() => true).catch(() => false)
-        showToast(
-          `Account "${data.username}" created! Setup link ${copied ? 'copied to clipboard' : 'shown below'}. Share it with the user so they can set their password.`,
-          'success',
-        )
-        if (!copied) {
-          window.prompt('Copy this setup link and share it with the user:', data.setup_url)
-        }
-      } else {
-        showToast(`Access request approved. Verification email sent to ${provisionFor.email}.`)
-      }
+      showToast(`Access request approved. Verification email sent to ${provisionFor.email}.`)
       closeApproval()
       fetchRows()
     } catch (err) {
