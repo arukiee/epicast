@@ -33,3 +33,6 @@ frontend/dist/
 # ── Secrets (always exclude) ──────────────────────────────────────────────────
 backend/.env
 !backend/.env.example
+
+# Allow frontend production env (public API URL only, no secrets)
+!frontend/.env.production
