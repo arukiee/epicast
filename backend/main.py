@@ -56,12 +56,10 @@ def _validate_production_config():
 
 
 def _cors_origins():
-    """Localhost regex for dev; comma-separated CORS_ORIGINS for deployed frontends."""
+    """Comma-separated CORS_ORIGINS env var for explicit origin allow-listing."""
     extra = os.getenv("CORS_ORIGINS", "").strip()
     origins = [o.strip() for o in extra.split(",") if o.strip()]
-    if origins:
-        return origins
-    return None
+    return origins if origins else None
 
 
 @asynccontextmanager
@@ -91,22 +89,25 @@ app = FastAPI(
 
 _cors_list = _cors_origins()
 if _cors_list:
+    # Explicit origin list (production with known frontend domain)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_list,
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 else:
-    # Development: any localhost port so Vite port-hopping never breaks CORS
+    # Allow all origins (dev + initial production before CORS_ORIGINS is set)
+    # Safe because we use Bearer tokens in Authorization header, not cookies.
     app.add_middleware(
         CORSMiddleware,
-        allow_origin_regex=r"http://localhost:\d+",
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
