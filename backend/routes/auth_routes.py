@@ -39,14 +39,28 @@ router = APIRouter(tags=["Authentication"])
 
 def _app_public_url(request: Request) -> str:
     """Base URL for links in transactional email (verify, reset password)."""
-    configured = os.getenv("APP_PUBLIC_URL", "").strip().rstrip("/")
-    if configured:
-        return configured
+    # 1. First, check the incoming request origin or referer (representing the active browser session).
+    # If the user is browsing on a public domain, prioritize it to dynamically adapt to deployment.
     header = request.headers.get("origin") or request.headers.get("referer") or ""
     if header and "://" in header:
         parts = header.split("/")
-        return "/".join(parts[:3])
+        origin_url = "/".join(parts[:3]).rstrip("/")
+        if "localhost" not in origin_url and "127.0.0.1" not in origin_url:
+            return origin_url
+
+    # 2. Fall back to configured environment variable
+    configured = os.getenv("APP_PUBLIC_URL", "").strip().rstrip("/")
+    if configured:
+        return configured
+
+    # 3. Fall back to browser origin (even if it's localhost)
+    if header and "://" in header:
+        parts = header.split("/")
+        return "/".join(parts[:3]).rstrip("/")
+
+    # 4. Ultimate default
     return "http://localhost:5173"
+
 
 
 def _normalize_email(email: str) -> str:
