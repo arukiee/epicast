@@ -5,3 +5,5 @@ channel = "stable-23_11"
 
 [env]
 VITE_API_URL = ""
+EPICAST_ENV = "development"
+ADMIN_INITIAL_PASSWORD = "admin123"
