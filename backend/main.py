@@ -382,12 +382,37 @@ def _seed_hyderabad_data():
         db.close()
 
 
-@app.get("/", tags=["Health"])
-async def root():
-    return {"status": "ok", "app": "Epicast", "version": "3.0.0", "focus": "Hyderabad"}
-
-
 @app.get("/health", tags=["Health"])
 async def health():
     """Railway/cloud health-check probe."""
     return {"status": "ok"}
+
+
+# Serve static files if they exist (Vite build)
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/dist"))
+if os.path.exists(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    # Root "/" serves React app if built, otherwise JSON status
+    @app.get("/", tags=["Static Files"])
+    async def root():
+        index_html = os.path.join(frontend_dist, "index.html")
+        if os.path.exists(index_html):
+            return FileResponse(index_html)
+        return {"status": "ok", "app": "Epicast", "version": "3.0.0", "focus": "Hyderabad"}
+
+    # Fallback to serve index.html for React router
+    @app.get("/{fallback_path:path}", tags=["Static Files"])
+    async def fallback(fallback_path: str):
+        file_path = os.path.join(frontend_dist, fallback_path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+else:
+    @app.get("/", tags=["Health"])
+    async def root():
+        return {"status": "ok", "app": "Epicast", "version": "3.0.0", "focus": "Hyderabad"}
+
