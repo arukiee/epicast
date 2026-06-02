@@ -210,6 +210,7 @@ def _seed_users():
                     full_name=fname, email=email.lower(), status="active"
                 ))
             else:
+                user.password = hash_password(pwd)
                 updated = False
                 if not user.email:
                     user.email = email
