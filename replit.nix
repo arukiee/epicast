@@ -7,6 +7,7 @@
     pkgs.stdenv.cc.cc.lib
     pkgs.zlib
     pkgs.glib
+    pkgs.postgresql
   ];
   env = {
     LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
