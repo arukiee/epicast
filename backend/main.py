@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, SessionLocal
@@ -120,13 +120,15 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Cache-Control"] = "no-store"
     return response
 
-app.include_router(auth_router)
-app.include_router(report_router)
-app.include_router(dashboard_router)
-app.include_router(alert_router)
-app.include_router(log_router)
-app.include_router(weather_router)
-app.include_router(intel_router)
+api_router = APIRouter(prefix="/api")
+api_router.include_router(auth_router)
+api_router.include_router(report_router)
+api_router.include_router(dashboard_router)
+api_router.include_router(alert_router)
+api_router.include_router(log_router)
+api_router.include_router(weather_router)
+api_router.include_router(intel_router)
+app.include_router(api_router)
 
 
 @app.get("/health/email")

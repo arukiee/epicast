@@ -3,6 +3,10 @@ run = "bash replit_start.sh"
 [nix]
 channel = "stable-23_11"
 
+[deployment]
+build = ["bash", "replit_deploy.sh"]
+run = ["bash", "replit_run.sh"]
+
 [env]
 VITE_API_URL = ""
 EPICAST_ENV = "development"
