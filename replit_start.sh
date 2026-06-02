@@ -2,12 +2,12 @@
 
 echo "Installing backend dependencies..."
 cd backend
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
 echo "Starting FastAPI backend on port 8000..."
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 cd ../frontend
